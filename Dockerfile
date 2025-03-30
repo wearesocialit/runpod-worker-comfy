@@ -66,7 +66,7 @@ WORKDIR /comfyui
 # Create necessary directories
 RUN mkdir -p models/checkpoints models/vae
 
-# Copy Network Volume models
+# Copy the Network Volume models
 COPY extra_model_paths.yaml /comfyui/extra_model_paths.yaml
 
 # Download checkpoints/vae/LoRA to include in image based on model type
