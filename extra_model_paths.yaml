@@ -1,29 +1,37 @@
 # Tell ComfyUI to look in the network volume mount path for models
 comfyui:
-  base_path: /comfyui/models # Keep the default base path
-  checkpoints: checkpoints
-  configs: configs
+  # base_path: /comfyui/models # Keep the default base path (Commented out, let ComfyUI use its default)
+  checkpoints:
+    - /runpod-volume/ComfyUI/models/checkpoints # Only network volume
+  configs:
+    - /runpod-volume/ComfyUI/models/configs # Only network volume
   vae:
-    # Add the network volume path in addition to default
-    - vae
-    - /runpod-volume/ComfyUI/models/vae
+    - /runpod-volume/ComfyUI/models/vae # Only network volume
   clip:
-    # Add the network volume path in addition to default
-    - clip
-    - /runpod-volume/ComfyUI/models/clip
-  clip_vision: clip_vision
-  loras: loras
-  upscale_models: upscale_models
-  embeddings: embeddings
-  hypernetworks: hypernetworks
-  controlnet: controlnet
-  gligen: gligen
-  # Add path for UNET/diffusion models
+    - /runpod-volume/ComfyUI/models/clip # Only network volume
+  clip_vision:
+    - /runpod-volume/ComfyUI/models/clip_vision # Only network volume
+  loras:
+    - /runpod-volume/ComfyUI/models/loras # Only network volume
+  upscale_models:
+    - /runpod-volume/ComfyUI/models/upscale_models # Only network volume
+  embeddings:
+    - /runpod-volume/ComfyUI/models/embeddings # Only network volume
+  hypernetworks:
+    - /runpod-volume/ComfyUI/models/hypernetworks # Only network volume
+  controlnet:
+    - /runpod-volume/ComfyUI/models/controlnet # Only network volume
+  gligen:
+    - /runpod-volume/ComfyUI/models/gligen # Only network volume
   unet:
-    - unet
-    - diffusion_models # Default subdirs
-    - /runpod-volume/ComfyUI/models/diffusion_models # Absolute path on volume
-  vae_approx: vae_approx
-  style_models: style_models
-  photomaker: photomaker
-  ipadapter: ipadapter
+    - /runpod-volume/ComfyUI/models/diffusion_models # Only network volume
+    # Also add the default 'unet' dir just in case some custom nodes expect it relative to base
+    - unet 
+  vae_approx:
+    - /runpod-volume/ComfyUI/models/vae_approx # Only network volume
+  style_models:
+    - /runpod-volume/ComfyUI/models/style_models # Only network volume
+  photomaker:
+    - /runpod-volume/ComfyUI/models/photomaker # Only network volume
+  ipadapter:
+    - /runpod-volume/ComfyUI/models/ipadapter # Only network volume
