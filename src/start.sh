@@ -8,20 +8,22 @@ if [ -d "$COMFYUI_DIR" ]; then
   cd "$COMFYUI_DIR" || exit
   echo "Current directory: $(pwd)"
 
-  # Start ComfyUI in the background
-  echo "Starting ComfyUI server in background..."
-  # Use python3 explicitly if needed, adjust flags as necessary
-  python main.py --port 8188 --listen 0.0.0.0 --disable-auto-launch &
+  # Add debug ls commands
+  echo "--- DEBUG: Listing relevant model directories ---"
+  echo "Listing /runpod-volume/ComfyUI/models/..."
+  ls -l /runpod-volume/ComfyUI/models/
+  echo "Listing /runpod-volume/ComfyUI/models/vae/..."
+  ls -l /runpod-volume/ComfyUI/models/vae/
+  echo "Listing /runpod-volume/ComfyUI/models/clip/..."
+  ls -l /runpod-volume/ComfyUI/models/clip/
+  echo "Listing /runpod-volume/ComfyUI/models/diffusion_models/..."
+  ls -l /runpod-volume/ComfyUI/models/diffusion_models/
+  echo "--- END DEBUG ---"
 
-  # Give ComfyUI a moment to start up (adjust sleep time if needed)
-  sleep 5 
 
-  # Start the RunPod handler in the foreground
-  # Assuming rp_handler.py is in the src directory, adjust path if necessary
-  # Use python3 explicitly if needed
-  echo "Starting RunPod handler..."
-  python -u /rp_handler.py 
-
+  # Run the Python script with arguments (This was the state that passed validation)
+  echo "Starting ComfyUI directly (reverted state)..."
+  python main.py --dont-print-server --port 8188 --listen 0.0.0.0 "$@"
 else
   # Print an error message if the directory doesn't exist
   echo "Error: Directory $COMFYUI_DIR not found."
