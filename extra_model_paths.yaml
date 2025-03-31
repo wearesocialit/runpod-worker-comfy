@@ -6,11 +6,11 @@ comfyui:
   vae:
     # Add the network volume path in addition to default
     - vae
-    - /runpod-volume/workspace/ComfyUI/models/vae
+    - /runpod-volume/ComfyUI/models/vae
   clip:
     # Add the network volume path in addition to default
     - clip
-    - /runpod-volume/workspace/ComfyUI/models/clip
+    - /runpod-volume/ComfyUI/models/clip
   clip_vision: clip_vision
   loras: loras
   upscale_models: upscale_models
@@ -22,7 +22,7 @@ comfyui:
   unet:
     - unet
     - diffusion_models # Default subdirs
-    - /runpod-volume/workspace/ComfyUI/models/diffusion_models # Absolute path on volume
+    - /runpod-volume/ComfyUI/models/diffusion_models # Absolute path on volume
   vae_approx: vae_approx
   style_models: style_models
   photomaker: photomaker
