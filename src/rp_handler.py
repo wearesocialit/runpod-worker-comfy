@@ -9,6 +9,29 @@ import requests
 import base64
 from io import BytesIO
 
+# --- DEBUGGING: List directories --- 
+def list_dir_safe(path):
+    try:
+        return os.listdir(path)
+    except FileNotFoundError:
+        return f"Directory not found: {path}"
+    except Exception as e:
+        return f"Error listing {path}: {e}"
+
+print("--- Filesystem Debug --- ")
+print(f"/: {list_dir_safe('/')}")
+print(f"/workspace: {list_dir_safe('/workspace')}") # Common mount point
+print(f"/mnt: {list_dir_safe('/mnt')}")           # Another common mount point
+print(f"/trainingless: {list_dir_safe('/trainingless')}") # Our previous guess
+print(f"/runpod-volume: {list_dir_safe('/runpod-volume')}") # Another possibility
+print(f"/comfyui/models: {list_dir_safe('/comfyui/models')}")
+print(f"/trainingless/workspace/ComfyUI/models: {list_dir_safe('/trainingless/workspace/ComfyUI/models')}")
+print(f"/trainingless/workspace/ComfyUI/models/diffusion_models: {list_dir_safe('/trainingless/workspace/ComfyUI/models/diffusion_models')}")
+print(f"/trainingless/workspace/ComfyUI/models/vae: {list_dir_safe('/trainingless/workspace/ComfyUI/models/vae')}")
+print(f"/trainingless/workspace/ComfyUI/models/clip: {list_dir_safe('/trainingless/workspace/ComfyUI/models/clip')}")
+print("--- End Filesystem Debug --- ")
+# --- End DEBUGGING ---
+
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
 # Maximum number of API check attempts
@@ -275,27 +298,36 @@ def process_output_images(outputs, job_id):
 
 def handler(job):
     """
-    The main function that handles a job of generating an image.
-
-    This function validates the input, sends a prompt to ComfyUI for processing,
-    polls ComfyUI for result, and retrieves generated images.
+    Runs the handler function.
 
     Args:
-        job (dict): A dictionary containing job details and input parameters.
-
-    Returns:
-        dict: A dictionary containing either an error message or a success status with generated images.
+        job (dict): The job data.
     """
+
+    # --- DEBUGGING: List directories (again inside handler) --- 
+    print("--- Filesystem Debug (Inside Handler) --- ")
+    print(f"/: {list_dir_safe('/')}")
+    print(f"/workspace: {list_dir_safe('/workspace')}")
+    print(f"/mnt: {list_dir_safe('/mnt')}")
+    print(f"/trainingless: {list_dir_safe('/trainingless')}")
+    print(f"/runpod-volume: {list_dir_safe('/runpod-volume')}")
+    print(f"/comfyui/models: {list_dir_safe('/comfyui/models')}")
+    print(f"Configured VAE Path: {list_dir_safe('/trainingless/workspace/ComfyUI/models/vae')}")
+    print(f"Configured CLIP Path: {list_dir_safe('/trainingless/workspace/ComfyUI/models/clip')}")
+    print(f"Configured UNET Path: {list_dir_safe('/trainingless/workspace/ComfyUI/models/diffusion_models')}")
+    print("--- End Filesystem Debug (Inside Handler) --- ")
+    # --- End DEBUGGING ---
+
     job_input = job["input"]
 
-    # Make sure that the input is valid
-    validated_data, error_message = validate_input(job_input)
+    # Validate the input
+    validated_input, error_message = validate_input(job_input)
     if error_message:
         return {"error": error_message}
 
     # Extract validated data
-    workflow = validated_data["workflow"]
-    images = validated_data.get("images")
+    workflow = validated_input["workflow"]
+    images = validated_input.get("images")
 
     # Make sure that the ComfyUI API is available
     check_server(
