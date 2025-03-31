@@ -34,4 +34,4 @@ comfyui:
   photomaker:
     - /runpod-volume/ComfyUI/models/photomaker # Only network volume
   ipadapter:
-    - /runpod-volume/ComfyUI/models/ipadapter # Only network volume
+    - /runpod-volume/ComfyUI/models/ipadapter # Only network volume 
