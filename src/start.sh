@@ -1,20 +1,31 @@
-#!/usr/bin/env bash
+#!/bin/bash
+# Set the desired directory
+COMFYUI_DIR="/comfyui"
 
-# Use libtcmalloc for better memory management
-TCMALLOC="$(ldconfig -p | grep -Po "libtcmalloc.so.\d" | head -n 1)"
-export LD_PRELOAD="${TCMALLOC}"
+# Check if the directory exists
+if [ -d "$COMFYUI_DIR" ]; then
+  # Navigate to the directory
+  cd "$COMFYUI_DIR" || exit
+  echo "Current directory: $(pwd)"
 
-# Serve the API and don't shutdown the container
-if [ "$SERVE_API_LOCALLY" == "true" ]; then
-    echo "runpod-worker-comfy: Starting ComfyUI with explicit config"
-    python3 /comfyui/main.py --extra-model-paths-config /comfyui/extra_model_paths.yaml --disable-auto-launch --disable-metadata --listen &
+  # Add debug ls commands
+  echo "--- DEBUG: Listing relevant model directories ---"
+  echo "Listing /runpod-volume/ComfyUI/models/..."
+  ls -l /runpod-volume/ComfyUI/models/
+  echo "Listing /runpod-volume/ComfyUI/models/vae/..."
+  ls -l /runpod-volume/ComfyUI/models/vae/
+  echo "Listing /runpod-volume/ComfyUI/models/clip/..."
+  ls -l /runpod-volume/ComfyUI/models/clip/
+  echo "Listing /runpod-volume/ComfyUI/models/diffusion_models/..."
+  ls -l /runpod-volume/ComfyUI/models/diffusion_models/
+  echo "--- END DEBUG ---"
 
-    echo "runpod-worker-comfy: Starting RunPod Handler"
-    python3 -u /rp_handler.py --rp_serve_api --rp_api_host=0.0.0.0
+
+  # Run the Python script with arguments
+  echo "Starting ComfyUI with runpod handler..."
+  python main.py --dont-print-server --port 8188 --listen 0.0.0.0 "$@"
 else
-    echo "runpod-worker-comfy: Starting ComfyUI with explicit config"
-    python3 /comfyui/main.py --extra-model-paths-config /comfyui/extra_model_paths.yaml --disable-auto-launch --disable-metadata &
-
-    echo "runpod-worker-comfy: Starting RunPod Handler"
-    python3 -u /rp_handler.py
+  # Print an error message if the directory doesn't exist
+  echo "Error: Directory $COMFYUI_DIR not found."
+  exit 1
 fi
