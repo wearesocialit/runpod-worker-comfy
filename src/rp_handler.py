@@ -26,7 +26,7 @@ REFRESH_WORKER = os.environ.get("REFRESH_WORKER", "false").lower() == "true"
 
 def validate_input(job_input):
     """
-    Validates the input for the handler function.
+    Validates the input for the handler function
 
     Args:
         job_input (dict): The input data to validate.
@@ -76,7 +76,7 @@ def check_server(url, retries=500, delay=50):
     - delay (int, optional): The time in milliseconds to wait between retries. Default is 500
 
     Returns:
-    bool: True if the server is reachable within the given number of retries, otherwise False ---
+    bool: True if the server is reachable within the given number of retries, otherwise False
     """
 
     for i in range(retries):
