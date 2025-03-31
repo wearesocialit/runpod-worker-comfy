@@ -91,6 +91,9 @@ RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
 # Stage 3: Final image
 FROM base as final
 
+# Copy the config file from the base stage
+COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
+
 # Copy models from stage 2 to the final image
 COPY --from=downloader /comfyui/models /comfyui/models
 

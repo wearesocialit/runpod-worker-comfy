@@ -1,29 +1,29 @@
 # Tell ComfyUI to look in the network volume mount path for models
-         comfyui:
-           base_path: /comfyui/models # Keep the default base path
-           checkpoints: checkpoints
-           configs: configs
-           vae:
-              # Add the network volume path in addition to default
-              - vae
-              - /trainingless/workspace/ComfyUI/models/vae
-           clip:
-              # Add the network volume path in addition to default
-              - clip
-              - /trainingless/workspace/ComfyUI/models/clip
-           clip_vision: clip_vision
-           loras: loras
-           upscale_models: upscale_models
-           embeddings: embeddings
-           hypernetworks: hypernetworks
-           controlnet: controlnet
-           gligen: gligen
-           # Add path for UNET/diffusion models
-           unet:
-              - unet
-              - diffusion_models # Default subdirs
-              - /trainingless/workspace/ComfyUI/models/diffusion_models # Absolute path on volume
-           vae_approx: vae_approx
-           style_models: style_models
-           photomaker: photomaker
-           ipadapter: ipadapter
+comfyui:
+  base_path: /comfyui/models # Keep the default base path
+  checkpoints: checkpoints
+  configs: configs
+  vae:
+    # Add the network volume path in addition to default
+    - vae
+    - /trainingless/workspace/ComfyUI/models/vae
+  clip:
+    # Add the network volume path in addition to default
+    - clip
+    - /trainingless/workspace/ComfyUI/models/clip
+  clip_vision: clip_vision
+  loras: loras
+  upscale_models: upscale_models
+  embeddings: embeddings
+  hypernetworks: hypernetworks
+  controlnet: controlnet
+  gligen: gligen
+  # Add path for UNET/diffusion models
+  unet:
+    - unet
+    - diffusion_models # Default subdirs
+    - /trainingless/workspace/ComfyUI/models/diffusion_models # Absolute path on volume
+  vae_approx: vae_approx
+  style_models: style_models
+  photomaker: photomaker
+  ipadapter: ipadapter
