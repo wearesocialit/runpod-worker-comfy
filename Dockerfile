@@ -36,7 +36,7 @@ WORKDIR /comfyui
 RUN pip install runpod requests
 
 # Support for the network volume
-ADD src/extra_model_paths.yaml ./
+ADD src/network_models.yaml ./
 
 # Go back to the root
 WORKDIR /
@@ -92,7 +92,7 @@ RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
 FROM base as final
 
 # Copy the config file from the base stage
-COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
+COPY --from=base /comfyui/network_models.yaml /comfyui/
 
 # Copy models from stage 2 to the final image
 COPY --from=downloader /comfyui/models /comfyui/models
