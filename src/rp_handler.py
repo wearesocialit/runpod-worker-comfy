@@ -29,7 +29,7 @@ print(f"/trainingless/workspace/ComfyUI/models: {list_dir_safe('/trainingless/wo
 print(f"/trainingless/workspace/ComfyUI/models/diffusion_models: {list_dir_safe('/trainingless/workspace/ComfyUI/models/diffusion_models')}")
 print(f"/trainingless/workspace/ComfyUI/models/vae: {list_dir_safe('/trainingless/workspace/ComfyUI/models/vae')}")
 print(f"/trainingless/workspace/ComfyUI/models/clip: {list_dir_safe('/trainingless/workspace/ComfyUI/models/clip')}")
-print("--- End Filesystem Debug --- ")
+print("--- End Filesystem Debug -- ")
 # --- End DEBUGGING ---
 
 # Time to wait between API check attempts in milliseconds
