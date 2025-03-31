@@ -11,7 +11,7 @@ if [ -d "$COMFYUI_DIR" ]; then
   # Start ComfyUI in the background
   echo "Starting ComfyUI server in background..."
   # Use python3 explicitly if needed, adjust flags as necessary
-  python main.py --port 8188 --listen 0.0.0.0 --disable-auto-launch --extra-model-paths-config /comfyui/extra_model_paths.yaml &
+  python main.py --port 8188 --listen 0.0.0.0 --disable-auto-launch &
 
   # Give ComfyUI a moment to start up (adjust sleep time if needed)
   sleep 5 
