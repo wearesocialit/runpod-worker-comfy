@@ -36,7 +36,7 @@ WORKDIR /comfyui
 RUN pip install runpod requests
 
 # Support for the network volume
-ADD src/network_models.yaml ./
+ADD src/extra_model_paths.yaml ./
 
 # Go back to the root
 WORKDIR /
@@ -66,11 +66,8 @@ WORKDIR /comfyui
 # Create necessary directories
 RUN mkdir -p models/checkpoints models/vae
 
-# Cache bust to ensure subsequent COPY uses correct source path
-RUN echo "Cache bust $(date)"
-
-# Copy the renamed Network Volume model paths config from the src directory
-COPY src/network_models.yaml /comfyui/network_models.yaml
+# Reverted: Copy the original Network Volume model paths config from the src directory
+COPY src/extra_model_paths.yaml /comfyui/extra_model_paths.yaml
 
 # Download checkpoints/vae/LoRA to include in image based on model type
 RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
@@ -94,8 +91,8 @@ RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
 # Stage 3: Final image
 FROM base as final
 
-# Copy the config file from the base stage
-COPY --from=base /comfyui/network_models.yaml /comfyui/
+# Reverted: Copy the original config file from the base stage
+COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
 
 # Copy models from stage 2 to the final image
 COPY --from=downloader /comfyui/models /comfyui/models
