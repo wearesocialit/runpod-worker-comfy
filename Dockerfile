@@ -66,6 +66,9 @@ WORKDIR /comfyui
 # Create necessary directories
 RUN mkdir -p models/checkpoints models/vae
 
+# Cache bust to ensure subsequent COPY uses correct source path
+RUN echo "Cache bust $(date)"
+
 # Copy the renamed Network Volume model paths config from the src directory
 COPY src/network_models.yaml /comfyui/network_models.yaml
 
