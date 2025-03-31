@@ -66,8 +66,8 @@ WORKDIR /comfyui
 # Create necessary directories
 RUN mkdir -p models/checkpoints models/vae
 
-# Copy the renamed Network Volume model paths config
-COPY network_models.yaml /comfyui/network_models.yaml
+# Copy the renamed Network Volume model paths config from the src directory
+COPY src/network_models.yaml /comfyui/network_models.yaml
 
 # Download checkpoints/vae/LoRA to include in image based on model type
 RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
