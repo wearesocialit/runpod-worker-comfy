@@ -1,5 +1,5 @@
 import runpod
-from runpod.serverless.utils import rp_upload
+from runpod.serverless.utils import rp_upload, rp_cleanup
 import json
 import urllib.request
 import urllib.parse
@@ -13,6 +13,8 @@ from io import BytesIO
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
 # Maximum number of API check attempts
 COMFY_API_AVAILABLE_MAX_RETRIES = 500
+# Maximum time to wait for ComfyUI /object_info to be ready (in seconds)
+COMFY_API_READY_TIMEOUT = int(os.environ.get("COMFY_API_READY_TIMEOUT", 60)) # Increased default to 60s
 # Time to wait between poll attempts in milliseconds
 COMFY_POLLING_INTERVAL_MS = int(os.environ.get("COMFY_POLLING_INTERVAL_MS", 250))
 # Maximum number of poll attempts
@@ -66,38 +68,45 @@ def validate_input(job_input):
     return {"workflow": workflow, "images": images}, None
 
 
-def check_server(url, retries=500, delay=50):
+def wait_for_comfy_api_ready(url, timeout_seconds=COMFY_API_READY_TIMEOUT):
     """
-    Check if a server is reachable via HTTP GET request
+    Waits until the ComfyUI API /object_info endpoint is responsive and 
+    indicates core nodes (like VAELoader) are available.
 
     Args:
-    - url (str): The URL to check
-    - retries (int, optional): The number of times to attempt connecting to the server. Default is 50
-    - delay (int, optional): The time in milliseconds to wait between retries. Default is 500
+        url (str): The base URL of the ComfyUI server (e.g., http://127.0.0.1:8188).
+        timeout_seconds (int): Maximum time to wait in seconds.
 
     Returns:
-    bool: True if the server is reachable within the given number of retries, otherwise False
+        bool: True if the API becomes ready within the timeout, False otherwise.
     """
-
-    for i in range(retries):
+    start_time = time.time()
+    object_info_url = f"{url}/object_info"
+    print(f"runpod-worker-comfy - Waiting for ComfyUI API at {object_info_url} to be ready...")
+    while True:
+        if time.time() - start_time > timeout_seconds:
+            print(f"runpod-worker-comfy - Timeout waiting for ComfyUI API to be ready after {timeout_seconds}s.")
+            return False
         try:
-            response = requests.get(url)
-
-            # If the response status code is 200, the server is up and running
+            response = requests.get(object_info_url, timeout=5) # Add timeout to request
             if response.status_code == 200:
-                print(f"runpod-worker-comfy - API is reachable")
-                return True
+                try:
+                    object_info = response.json()
+                    # Check if a common core node exists in the response
+                    # Adjust node name if necessary for your specific setup
+                    if isinstance(object_info, dict) and "VAELoader" in object_info:
+                        print(f"runpod-worker-comfy - ComfyUI API is ready.")
+                        return True
+                    else:
+                        print(f"runpod-worker-comfy - API up, but /object_info doesn't contain expected nodes yet. Retrying...")
+                except json.JSONDecodeError:
+                     print(f"runpod-worker-comfy - API up, but /object_info returned invalid JSON. Retrying...")
+            # Optionally handle other status codes if needed
         except requests.RequestException as e:
-            # If an exception occurs, the server may not be ready
-            pass
-
-        # Wait for the specified delay before retrying
-        time.sleep(delay / 1000)
-
-    print(
-        f"runpod-worker-comfy - Failed to connect to server at {url} after {retries} attempts."
-    )
-    return False
+            # print(f"runpod-worker-comfy - API not reachable yet ({e}). Retrying...") # Verbose logging
+            pass # Ignore connection errors and keep trying
+        
+        time.sleep(COMFY_API_AVAILABLE_INTERVAL_MS / 1000) # Use interval for sleep
 
 
 def upload_images(images):
@@ -248,23 +257,19 @@ def process_output_images(outputs, job_id):
 
     # The image is in the output folder
     if os.path.exists(local_image_path):
-        if os.environ.get("BUCKET_ENDPOINT_URL", False):
-            # URL to image in AWS S3
-            image = rp_upload.upload_image(job_id, local_image_path)
-            print(
-                "runpod-worker-comfy - the image was generated and uploaded to AWS S3"
-            )
+        # Use rp_upload utility if BUCKET_ENDPOINT_URL is set
+        if os.environ.get("BUCKET_ENDPOINT_URL", None):
+            print("runpod-worker-comfy - Uploading image to bucket...")
+            image_url = rp_upload.upload_image(job_id, local_image_path)
+            rp_cleanup.clean([local_image_path]) # Clean up after upload
+            return {"status": "success", "message": image_url}
         else:
-            # base64 image
-            image = base64_encode(local_image_path)
             print(
-                "runpod-worker-comfy - the image was generated and converted to base64"
+                "runpod-worker-comfy - Returning base64 encoded image as no bucket is configured"
             )
-
-        return {
-            "status": "success",
-            "message": image,
-        }
+            image_base64 = base64_encode(local_image_path)
+            rp_cleanup.clean([local_image_path]) # Clean up after encoding
+            return {"status": "success", "message": image_base64}
     else:
         print("runpod-worker-comfy - the image does not exist in the output folder")
         return {
@@ -280,9 +285,13 @@ def handler(job):
     Args:
         job (dict): The job data.
     """
-    job_input = job["input"]
-
+    # Use the more robust readiness check
+    api_ready = wait_for_comfy_api_ready(f"http://{COMFY_HOST}")
+    if not api_ready:
+        return {"error": "ComfyUI API did not become ready in time"}
+    
     # Validate the input
+    job_input = job["input"]
     validated_input, error_message = validate_input(job_input)
     if error_message:
         return {"error": error_message}
@@ -290,13 +299,6 @@ def handler(job):
     # Extract validated data
     workflow = validated_input["workflow"]
     images = validated_input.get("images")
-
-    # Make sure that the ComfyUI API is available
-    check_server(
-        f"http://{COMFY_HOST}",
-        COMFY_API_AVAILABLE_MAX_RETRIES,
-        COMFY_API_AVAILABLE_INTERVAL_MS,
-    )
 
     # Upload images if they exist
     upload_result = upload_images(images)
