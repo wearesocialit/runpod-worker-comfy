@@ -76,7 +76,7 @@ def check_server(url, retries=500, delay=50):
     - delay (int, optional): The time in milliseconds to wait between retries. Default is 500
 
     Returns:
-    bool: True if the server is reachable within the given number of retries, otherwise False
+    bool: True if the server is reachable within the given number of retries, otherwise False ---
     """
 
     for i in range(retries):
