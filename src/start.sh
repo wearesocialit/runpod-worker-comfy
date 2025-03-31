@@ -20,10 +20,18 @@ if [ -d "$COMFYUI_DIR" ]; then
   ls -l /runpod-volume/ComfyUI/models/diffusion_models/
   echo "--- END DEBUG ---"
 
+  # Start ComfyUI in the background
+  echo "Starting ComfyUI server in background..."
+  # Use python3 explicitly if needed, adjust flags as necessary
+  python main.py --port 8188 --listen 0.0.0.0 --disable-auto-launch &
 
-  # Run the Python script with arguments (This was the state that passed validation)
-  echo "Starting ComfyUI directly (reverted state)..."
-  python main.py --dont-print-server --port 8188 --listen 0.0.0.0 "$@"
+  # Give ComfyUI more time to start up
+  echo "Waiting 15s for ComfyUI to initialize..."
+  sleep 15 
+
+  # Start the RunPod handler in the foreground
+  echo "Starting RunPod handler..."
+  python rp_handler.py
 else
   # Print an error message if the directory doesn't exist
   echo "Error: Directory $COMFYUI_DIR not found."
