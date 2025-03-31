@@ -31,7 +31,7 @@ if [ -d "$COMFYUI_DIR" ]; then
 
   # Start the RunPod handler in the foreground
   echo "Starting RunPod handler..."
-  python rp_handler.py
+  python /rp_handler.py
 else
   # Print an error message if the directory doesn't exist
   echo "Error: Directory $COMFYUI_DIR not found."
