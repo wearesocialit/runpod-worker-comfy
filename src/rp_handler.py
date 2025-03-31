@@ -8,6 +8,7 @@ import os
 import requests
 import base64
 from io import BytesIO
+import uuid # Added for unique filenames
 
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
@@ -278,6 +279,62 @@ def process_output_images(outputs, job_id):
         }
 
 
+# --- New Function to Handle Base64 Input for LoadImage ---
+def preprocess_loadimage_nodes(workflow):
+    """
+    Scans the workflow for LoadImage nodes. If the 'image' input is base64,
+    decodes it, saves it to /comfyui/input, and updates the node input.
+    """
+    COMFY_INPUT_PATH = os.environ.get("COMFY_INPUT_PATH", "/comfyui/input")
+    os.makedirs(COMFY_INPUT_PATH, exist_ok=True) # Ensure input directory exists
+
+    if not isinstance(workflow, dict):
+        print("runpod-worker-comfy - Warning: Workflow is not a dictionary, skipping image preprocessing.")
+        return workflow # Or raise an error, depending on desired behavior
+
+    for node_id, node_data in workflow.items():
+        # Ensure node_data is a dictionary and contains 'class_type' and 'inputs'
+        if not isinstance(node_data, dict):
+            # print(f"runpod-worker-comfy - Warning: Node data for ID {node_id} is not a dictionary, skipping.")
+            continue
+        
+        class_type = node_data.get('class_type')
+        inputs = node_data.get('inputs')
+
+        if class_type == "LoadImage" and inputs and 'image' in inputs:
+            image_input_value = inputs['image']
+            if isinstance(image_input_value, str):
+                try:
+                    # Attempt to decode base64. This assumes raw base64, no data URI prefix.
+                    image_bytes = base64.b64decode(image_input_value)
+                    
+                    # Generate unique filename (assuming PNG, LoadImage might handle others)
+                    filename = f"rp_input_{uuid.uuid4()}.png" 
+                    filepath = os.path.join(COMFY_INPUT_PATH, filename)
+                    
+                    # Save the decoded image
+                    with open(filepath, 'wb') as f:
+                        f.write(image_bytes)
+                    
+                    # Update the workflow input to use the filename
+                    inputs['image'] = filename
+                    print(f"runpod-worker-comfy - Decoded base64 input for node {node_id}, saved as {filename}")
+                    
+                except (base64.binascii.Error, ValueError):
+                    # If it's not valid base64, assume it's already a filename and leave it.
+                    # print(f"runpod-worker-comfy - Input for LoadImage node {node_id} is not base64, assuming filename: {image_input_value[:50]}...")
+                    pass 
+                except Exception as e:
+                    # Catch other potential errors during file saving
+                    print(f"runpod-worker-comfy - Error processing image for node {node_id}: {e}")
+            # else:
+                # print(f"runpod-worker-comfy - Input for LoadImage node {node_id} is not a string, skipping base64 check.")
+
+    return workflow # Return the potentially modified workflow
+
+# --- End New Function ---
+
+
 def handler(job):
     """
     Runs the handler function.
@@ -305,6 +362,14 @@ def handler(job):
 
     if upload_result["status"] == "error":
         return upload_result
+
+    # --- Preprocess workflow for LoadImage base64 inputs ---
+    try:
+        workflow = preprocess_loadimage_nodes(workflow)
+    except Exception as e:
+        print(f"runpod-worker-comfy - Error during workflow preprocessing: {e}")
+        return {"error": f"Error during workflow preprocessing: {e}"}
+    # --- End Preprocessing ---
 
     # Queue the workflow
     try:
