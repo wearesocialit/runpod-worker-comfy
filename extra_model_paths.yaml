@@ -1,12 +1,16 @@
 # Custom paths from the RunPod volume mount
-comfyui_volume:
-    base_path: /runpod-volume/ComfyUI/models/
 
-    # ComfyUI automatically looks for standard subfolders (vae, clip, loras etc.) under base_path.
-    # Only specify paths here if your folder name DIFFERS from the ComfyUI model type name,
-    # OR if auto-detection seems unreliable.
-    unet: diffusion_models # Map 'unet' type models to the 'diffusion_models' subfolder
-    vae: vae               # Explicitly map 'vae' type to 'vae' subfolder
-    clip: clip             # Explicitly map 'clip' type to 'clip' subfolder
-    # Add other mappings if needed, e.g.:
-    # checkpoints: stable_diffusion_checkpoints 
+# Define full paths directly for each model type
+vae:
+  - /runpod-volume/ComfyUI/models/vae
+clip:
+  - /runpod-volume/ComfyUI/models/clip
+unet:
+  - /runpod-volume/ComfyUI/models/diffusion_models
+
+# Add other types if needed, ensure they point to the correct subfolder under /runpod-volume/ComfyUI/models/
+# Example:
+# loras:
+#  - /runpod-volume/ComfyUI/models/loras
+# checkpoints:
+#  - /runpod-volume/ComfyUI/models/checkpoints 
