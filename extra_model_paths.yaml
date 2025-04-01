@@ -3,7 +3,10 @@ comfyui_volume:
     base_path: /runpod-volume/ComfyUI/models/
 
     # ComfyUI automatically looks for standard subfolders (vae, clip, loras etc.) under base_path.
-    # Only specify paths here if your folder name DIFFERS from the ComfyUI model type name.
+    # Only specify paths here if your folder name DIFFERS from the ComfyUI model type name,
+    # OR if auto-detection seems unreliable.
     unet: diffusion_models # Map 'unet' type models to the 'diffusion_models' subfolder
+    vae: vae               # Explicitly map 'vae' type to 'vae' subfolder
+    clip: clip             # Explicitly map 'clip' type to 'clip' subfolder
     # Add other mappings if needed, e.g.:
     # checkpoints: stable_diffusion_checkpoints 
