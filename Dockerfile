@@ -97,6 +97,9 @@ FROM base as final
 # Reverted: Copy the original config file from the base stage
 COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
 
+# Debug: List contents of /comfyui to verify copy
+RUN echo "--- Listing /comfyui contents during build (final stage) ---" && ls -lA /comfyui
+
 # Copy models from stage 2 to the final image
 COPY --from=downloader /comfyui/models /comfyui/models
 

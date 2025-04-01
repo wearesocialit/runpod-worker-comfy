@@ -20,6 +20,11 @@ if [ -d "$COMFYUI_DIR" ]; then
   ls -l /runpod-volume/ComfyUI/models/diffusion_models/
   echo "--- END DEBUG ---"
 
+  # --- NEW: Debug ls command for /comfyui directory ---
+  echo "--- DEBUG: Listing /comfyui directory before launching ComfyUI ---"
+  ls -lA .
+  echo "--- END DEBUG ---"
+
   # Start ComfyUI in the background
   echo "Starting ComfyUI server in background..."
   # Use python3 explicitly if needed, adjust flags as necessary
