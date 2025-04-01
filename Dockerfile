@@ -35,8 +35,11 @@ WORKDIR /comfyui
 # Install runpod
 RUN pip install runpod requests
 
+# Copy the extra model paths config file
+COPY extra_model_paths.yaml .
+
 # Support for the network volume
-ADD src/extra_model_paths.yaml ./
+# ADD src/extra_model_paths.yaml ./
 
 # Go back to the root
 WORKDIR /
@@ -67,7 +70,7 @@ WORKDIR /comfyui
 RUN mkdir -p models/checkpoints models/vae
 
 # Reverted: Copy the original Network Volume model paths config from the src directory
-COPY src/extra_model_paths.yaml /comfyui/extra_model_paths.yaml
+# COPY src/extra_model_paths.yaml /comfyui/extra_model_paths.yaml
 
 # Download checkpoints/vae/LoRA to include in image based on model type
 RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
