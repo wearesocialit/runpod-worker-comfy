@@ -25,6 +25,10 @@ if [ -d "$COMFYUI_DIR" ]; then
   ls -lA .
   echo "--- END DEBUG ---"
 
+  echo "--- DEBUG: Displaying extra_model_paths.yaml contents ---"
+  cat extra_model_paths.yaml
+  echo "--- END DEBUG ---"
+
   # Start ComfyUI in the background
   echo "Starting ComfyUI server in background..."
   # Use python3 explicitly if needed, adjust flags as necessary

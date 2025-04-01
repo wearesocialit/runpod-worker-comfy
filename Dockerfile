@@ -35,8 +35,10 @@ WORKDIR /comfyui
 # Install runpod
 RUN pip install runpod requests
 
-# Copy the extra model paths config file
-COPY extra_model_paths.yaml .
+# Copy the custom model paths configuration BEFORE ComfyUI potentially reads defaults
+# Also, rename the example file first to avoid potential conflicts
+RUN mv extra_model_paths.yaml.example extra_model_paths.yaml.example.bak || true
+COPY src/extra_model_paths.yaml .
 
 # Support for the network volume
 # ADD src/extra_model_paths.yaml ./
