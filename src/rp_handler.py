@@ -9,6 +9,7 @@ import requests
 import base64
 from io import BytesIO
 import uuid # Added for unique filenames
+import subprocess # Import subprocess module
 
 # Time to wait between API check attempts in milliseconds
 COMFY_API_AVAILABLE_INTERVAL_MS = 50
@@ -25,6 +26,23 @@ COMFY_HOST = "127.0.0.1:8188"
 # Enforce a clean state after each job is done
 # see https://docs.runpod.io/docs/handler-additional-controls#refresh-worker
 REFRESH_WORKER = os.environ.get("REFRESH_WORKER", "false").lower() == "true"
+
+# --- Debug Function to List Directories ---
+def list_directory_contents(path_to_list):
+    try:
+        print(f"--- Listing contents of: {path_to_list} ---")
+        # Use subprocess to run the ls command
+        result = subprocess.run(['ls', '-lA', path_to_list], capture_output=True, text=True, check=True)
+        print(result.stdout)
+        print(f"--- End of listing for: {path_to_list} ---")
+    except FileNotFoundError:
+        print(f"Error: Directory not found: {path_to_list}")
+    except subprocess.CalledProcessError as e:
+        print(f"Error executing ls command for {path_to_list}: {e}")
+        print(f"Stderr: {e.stderr}")
+    except Exception as e:
+        print(f"An unexpected error occurred while listing {path_to_list}: {e}")
+# --- End Debug Function ---
 
 
 def validate_input(job_input):
@@ -337,25 +355,33 @@ def preprocess_loadimage_nodes(workflow):
 
 def handler(job):
     """
-    Runs the handler function.
+    Handler function to process incoming jobs.
 
     Args:
-        job (dict): The job data.
+        job (dict): The job data containing input parameters.
+
+    Returns:
+        dict: The result of the job processing.
     """
-    # Use the more robust readiness check
-    api_ready = wait_for_comfy_api_ready(f"http://{COMFY_HOST}")
-    if not api_ready:
-        return {"error": "ComfyUI API did not become ready in time"}
-    
-    # Validate the input
     job_input = job["input"]
-    validated_input, error_message = validate_input(job_input)
+
+    # --- Add Directory Listing Debug --- 
+    print("--- Running Directory Listing Debug --- ")
+    list_directory_contents("/runpod-volume/models/") # List top-level models dir
+    list_directory_contents("/runpod-volume/models/vae/") # List the expected VAE dir
+    list_directory_contents("/comfyui/models/") # List ComfyUI internal models dir
+    list_directory_contents("/comfyui/models/vae/") # List ComfyUI internal VAE dir
+    print("--- End Directory Listing Debug --- ")
+    # --- End Directory Listing Debug --- 
+
+    # Validate input
+    workflow, error_message = validate_input(job_input)
     if error_message:
         return {"error": error_message}
 
     # Extract validated data
-    workflow = validated_input["workflow"]
-    images = validated_input.get("images")
+    workflow = workflow["workflow"]
+    images = workflow["images"]
 
     # Upload images if they exist
     upload_result = upload_images(images)
