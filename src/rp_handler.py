@@ -47,14 +47,16 @@ def list_directory_contents(path_to_list):
 
 def validate_input(job_input):
     """
-    Validates the input for the handler function
+    Validates the input for the handler function.
+    Looks for workflow data under 'workflow' or 'comfy_workflow'.
+    Checks 'images' format if present, but doesn't require it.
 
     Args:
         job_input (dict): The input data to validate.
 
     Returns:
         tuple: A tuple containing the validated data and an error message, if any.
-               The structure is (validated_data, error_message).
+               The structure is ({'extracted_workflow': workflow, 'images': images_or_none}, error_message).
     """
     # Validate if job_input is provided
     if job_input is None:
@@ -67,24 +69,26 @@ def validate_input(job_input):
         except json.JSONDecodeError:
             return None, "Invalid JSON format in input"
 
-    # Validate 'workflow' in input
-    workflow = job_input.get("workflow")
+    # Validate 'workflow' or 'comfy_workflow' in input
+    workflow = job_input.get("workflow") or job_input.get("comfy_workflow") # Check both keys
     if workflow is None:
-        return None, "Missing 'workflow' parameter"
+        return None, "Missing 'workflow' or 'comfy_workflow' parameter in input"
+    if not isinstance(workflow, dict):
+         return None, "'workflow' or 'comfy_workflow' must be a JSON object"
 
-    # Validate 'images' in input, if provided
+    # Validate 'images' in input, only if provided
     images = job_input.get("images")
     if images is not None:
         if not isinstance(images, list) or not all(
-            "name" in image and "image" in image for image in images
+            isinstance(image, dict) and "name" in image and "image" in image for image in images
         ):
             return (
                 None,
-                "'images' must be a list of objects with 'name' and 'image' keys",
+                "'images', if provided, must be a list of objects with 'name' and 'image' keys",
             )
 
     # Return validated data and no error
-    return {"workflow": workflow, "images": images}, None
+    return {"extracted_workflow": workflow, "images": images}, None # Store workflow under 'extracted_workflow'
 
 
 def wait_for_comfy_api_ready(url, timeout_seconds=COMFY_API_READY_TIMEOUT):
@@ -297,60 +301,69 @@ def process_output_images(outputs, job_id):
         }
 
 
-# --- New Function to Handle Base64 Input for LoadImage ---
-def preprocess_loadimage_nodes(workflow):
+def save_input_images(images):
     """
-    Scans the workflow for LoadImage nodes. If the 'image' input is base64,
-    decodes it, saves it to /comfyui/input, and updates the node input.
+    Decodes base64 images from the input list and saves them to /comfyui/input.
+
+    Args:
+        images (list | None): A list of dictionaries, each containing 'name' 
+                               and base64 'image' data, or None.
+
+    Returns:
+        dict: Status report (success or error with details).
     """
     COMFY_INPUT_PATH = os.environ.get("COMFY_INPUT_PATH", "/comfyui/input")
-    os.makedirs(COMFY_INPUT_PATH, exist_ok=True) # Ensure input directory exists
+    os.makedirs(COMFY_INPUT_PATH, exist_ok=True)
 
-    if not isinstance(workflow, dict):
-        print("runpod-worker-comfy - Warning: Workflow is not a dictionary, skipping image preprocessing.")
-        return workflow # Or raise an error, depending on desired behavior
+    if not images:
+        return {"status": "success", "message": "No images provided in input list."}
 
-    for node_id, node_data in workflow.items():
-        # Ensure node_data is a dictionary and contains 'class_type' and 'inputs'
-        if not isinstance(node_data, dict):
-            # print(f"runpod-worker-comfy - Warning: Node data for ID {node_id} is not a dictionary, skipping.")
-            continue
-        
-        class_type = node_data.get('class_type')
-        inputs = node_data.get('inputs')
+    save_errors = []
+    saved_files = []
 
-        if class_type == "LoadImage" and inputs and 'image' in inputs:
-            image_input_value = inputs['image']
-            if isinstance(image_input_value, str):
-                try:
-                    # Attempt to decode base64. This assumes raw base64, no data URI prefix.
-                    image_bytes = base64.b64decode(image_input_value)
-                    
-                    # Generate unique filename (assuming PNG, LoadImage might handle others)
-                    filename = f"rp_input_{uuid.uuid4()}.png" 
-                    filepath = os.path.join(COMFY_INPUT_PATH, filename)
-                    
-                    # Save the decoded image
-                    with open(filepath, 'wb') as f:
-                        f.write(image_bytes)
-                    
-                    # Update the workflow input to use the filename
-                    inputs['image'] = filename
-                    print(f"runpod-worker-comfy - Decoded base64 input for node {node_id}, saved as {filename}")
-                    
-                except (base64.binascii.Error, ValueError):
-                    # If it's not valid base64, assume it's already a filename and leave it.
-                    # print(f"runpod-worker-comfy - Input for LoadImage node {node_id} is not base64, assuming filename: {image_input_value[:50]}...")
-                    pass 
-                except Exception as e:
-                    # Catch other potential errors during file saving
-                    print(f"runpod-worker-comfy - Error processing image for node {node_id}: {e}")
-            # else:
-                # print(f"runpod-worker-comfy - Input for LoadImage node {node_id} is not a string, skipping base64 check.")
+    print(f"runpod-worker-comfy - Processing {len(images)} image(s) from input list...")
 
-    return workflow # Return the potentially modified workflow
+    for image_item in images:
+        try:
+            name = image_item["name"]
+            image_base64 = image_item["image"]
+            
+            # Basic check if it looks like base64
+            if not isinstance(image_base64, str) or len(image_base64) < 10:
+                 raise ValueError("Invalid image data format.")
+                 
+            image_bytes = base64.b64decode(image_base64)
+            filepath = os.path.join(COMFY_INPUT_PATH, name)
 
-# --- End New Function ---
+            # Save the decoded image, overwriting if necessary
+            with open(filepath, 'wb') as f:
+                f.write(image_bytes)
+            saved_files.append(name)
+            print(f"runpod-worker-comfy - Saved input image to: {filepath}")
+
+        except KeyError as e:
+            error_msg = f"Missing key {e} in image item: {image_item}"
+            print(f"runpod-worker-comfy - Error: {error_msg}")
+            save_errors.append(error_msg)
+        except (base64.binascii.Error, ValueError) as e:
+            error_msg = f"Failed to decode base64 for image '{image_item.get('name', 'UNKNOWN')}': {e}"
+            print(f"runpod-worker-comfy - Error: {error_msg}")
+            save_errors.append(error_msg)
+        except Exception as e:
+            error_msg = f"Unexpected error saving image '{image_item.get('name', 'UNKNOWN')}': {e}"
+            print(f"runpod-worker-comfy - Error: {error_msg}")
+            save_errors.append(error_msg)
+
+    if save_errors:
+        return {
+            "status": "error",
+            "message": "Errors occurred while saving input images.",
+            "details": save_errors,
+            "saved_files": saved_files
+        }
+
+    print(f"runpod-worker-comfy - Successfully saved input images: {saved_files}")
+    return {"status": "success", "message": "Input images saved successfully.", "saved_files": saved_files}
 
 
 def handler(job):
@@ -365,44 +378,54 @@ def handler(job):
     """
     job_input = job["input"]
 
-    # --- Add Directory Listing Debug --- 
+    # --- Add Directory Listing Debug ---
     print("--- Running Directory Listing Debug --- ")
-    list_directory_contents("/runpod-volume/models/") # List top-level models dir
-    list_directory_contents("/runpod-volume/models/vae/") # List the expected VAE dir
-    list_directory_contents("/comfyui/models/") # List ComfyUI internal models dir
-    list_directory_contents("/comfyui/models/vae/") # List ComfyUI internal VAE dir
+    list_directory_contents("/runpod-volume/ComfyUI/models/") # Example, adjust as needed
+    list_directory_contents("/runpod-volume/ComfyUI/models/vae/") # Example, adjust as needed
+    list_directory_contents("/comfyui/models/")
+    list_directory_contents("/comfyui/models/vae/")
     print("--- End Directory Listing Debug --- ")
-    # --- End Directory Listing Debug --- 
+    # --- End Directory Listing Debug ---
 
-    # Validate input
-    workflow, error_message = validate_input(job_input)
+    # Validate input 
+    validated_data, error_message = validate_input(job_input)
     if error_message:
         return {"error": error_message}
 
-    # Extract validated data
-    workflow = workflow["workflow"]
-    images = workflow["images"]
+    workflow_to_run = validated_data["extracted_workflow"]
+    images_list = validated_data.get("images") # Get the list of images
 
-    # Upload images if they exist
-    upload_result = upload_images(images)
+    # Make sure that the ComfyUI API is available
+    if not wait_for_comfy_api_ready(f"http://{COMFY_HOST}"):
+         return {"error": f"ComfyUI API at {COMFY_HOST} did not become ready in time."}
 
-    if upload_result["status"] == "error":
-        return upload_result
+    # Save images provided in the payload to the input directory
+    save_result = save_input_images(images_list)
+    if save_result["status"] == "error":
+        # Return error if saving failed
+        return {"error": save_result["message"], "details": save_result.get("details")}
 
-    # --- Preprocess workflow for LoadImage base64 inputs ---
+    # Queue the original workflow (it should reference the saved filenames)
     try:
-        workflow = preprocess_loadimage_nodes(workflow)
-    except Exception as e:
-        print(f"runpod-worker-comfy - Error during workflow preprocessing: {e}")
-        return {"error": f"Error during workflow preprocessing: {e}"}
-    # --- End Preprocessing ---
-
-    # Queue the workflow
-    try:
-        queued_workflow = queue_workflow(workflow)
+        queued_workflow = queue_workflow(workflow_to_run) # Use original workflow
         prompt_id = queued_workflow["prompt_id"]
         print(f"runpod-worker-comfy - queued workflow with ID {prompt_id}")
     except Exception as e:
+        # Consider adding more specific error details if possible
+        print(f"runpod-worker-comfy - Error queuing workflow: {str(e)}")
+        # Check if the error response from ComfyUI provides details
+        if hasattr(e, 'read'):
+             try:
+                 error_details = e.read().decode()
+                 print(f"runpod-worker-comfy - ComfyUI error details: {error_details}")
+                 # Try parsing JSON if it looks like it
+                 if error_details.strip().startswith('{'):
+                     error_json = json.loads(error_details)
+                     # Add specific fields if available, e.g., validation errors
+                     return {"error": f"Error queuing workflow: {str(e)}", "details": error_json}
+             except Exception as parse_error:
+                 print(f"runpod-worker-comfy - Could not decode/parse ComfyUI error details: {parse_error}")
+                 return {"error": f"Error queuing workflow: {str(e)} - unable to get details"}
         return {"error": f"Error queuing workflow: {str(e)}"}
 
     # Poll for completion
@@ -413,22 +436,41 @@ def handler(job):
             history = get_history(prompt_id)
 
             # Exit the loop if we have found the history
+            # Check if the prompt ID exists and has outputs
             if prompt_id in history and history[prompt_id].get("outputs"):
                 break
+            # Check if the prompt ID exists and has status -> exception (indicates API-level error)
+            elif prompt_id in history and history[prompt_id].get("status", {}).get("exception"):
+                 print(f"runpod-worker-comfy - Workflow execution failed with exception in history.")
+                 exception_details = history[prompt_id].get("status", {}).get("exception")
+                 return {"error": "Workflow execution failed.", "details": exception_details}
             else:
                 # Wait before trying again
                 time.sleep(COMFY_POLLING_INTERVAL_MS / 1000)
                 retries += 1
-        else:
-            return {"error": "Max retries reached while waiting for image generation"}
+        else: # This else belongs to the while loop, executed if loop finishes without break
+            # Try one last time to get history in case of race condition
+            history = get_history(prompt_id)
+            if not (prompt_id in history and history[prompt_id].get("outputs")):
+                 print(f"runpod-worker-comfy - Max retries reached. Last known history: {history.get(prompt_id)}")
+                 return {"error": "Max retries reached while waiting for image generation results."}
+
     except Exception as e:
-        return {"error": f"Error waiting for image generation: {str(e)}"}
+         print(f"runpod-worker-comfy - Error polling job status: {str(e)}")
+         return {"error": f"Error polling job status: {str(e)}"}
 
     # Get the generated image and return it as URL in an AWS bucket or as base64
-    images_result = process_output_images(history[prompt_id].get("outputs"), job["id"])
+    try:
+        final_outputs = history[prompt_id].get("outputs", {})
+        images_result = process_output_images(final_outputs, job["id"])
+    except Exception as e:
+        print(f"runpod-worker-comfy - Error processing output images: {str(e)}")
+        return {"error": f"Error processing output images: {str(e)}", "outputs_received": history.get(prompt_id, {}).get("outputs")}
+
+    # Clean up input directory (contains images saved by save_input_images)
+    rp_cleanup.clean(['/comfyui/input/*'])
 
     result = {**images_result, "refresh_worker": REFRESH_WORKER}
-
     return result
 
 
