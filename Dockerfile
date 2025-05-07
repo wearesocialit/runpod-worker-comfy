@@ -29,7 +29,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-pip \
     # Link pip now that it's installed
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip3 \
     # Clean lists for this layer
     && rm -rf /var/lib/apt/lists/*
 
