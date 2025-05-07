@@ -1,6 +1,5 @@
 # Stage 1: Base image with common dependencies
-FROM ubuntu:22.04 as base
-RUN echo "Hello from the top of the Dockerfile"
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
