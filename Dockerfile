@@ -73,24 +73,16 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base as downloader
 
-ARG HUGGINGFACE_ACCESS_TOKEN
-# ARG MODEL_TYPE # No longer used, we are targeting flux1-dev compatible support files
+# ARG HUGGINGFACE_ACCESS_TOKEN # No longer needed as no models are downloaded in this stage
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
 # Create necessary directories for models that will be copied to the final stage
-# Even if unet isn't downloaded here, the directory might be expected by COPY command or ComfyUI
+# No models will be downloaded here; they are expected to be on the network volume.
 RUN mkdir -p models/unet models/clip models/vae
 
-# Download flux1-dev compatible text encoders and VAE
-# The UNet (flux1-dev.safetensors) itself will NOT be downloaded.
-# Ensure HUGGINGFACE_ACCESS_TOKEN is available as a build secret or environment variable if needed for VAE.
-RUN echo "Downloading flux1-dev compatible support models (CLIP encoders, VAE)..." && \
-    wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-    wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-    # wget ${HUGGINGFACE_ACCESS_TOKEN:+--header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}"} -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
-
+# Ensure there's no empty continuation line before the next stage
 # Stage 3: Final image
 FROM base as final
 
