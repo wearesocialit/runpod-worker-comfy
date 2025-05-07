@@ -10,20 +10,28 @@ ENV PYTHONUNBUFFERED=1
 # Speed up some cmake builds
 ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 
-# Install Python, git and other necessary tools
+# Install Python, git and other base tools
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3.10-dev \
     python3.10-venv \
-    python3-pip \
     git \
     wget \
     libgl1 \
     libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/* \
+    # Link python3.10 to python immediately
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
+    # Clean lists for this layer
+    && rm -rf /var/lib/apt/lists/*
+
+# Install pip separately now that python points to 3.10, then set pip links
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3-pip \
+    # Link pip now that it's installed
     && ln -sf /usr/bin/pip3 /usr/bin/pip \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip3
+    && ln -sf /usr/bin/pip3 /usr/bin/pip3 \
+    # Clean lists for this layer
+    && rm -rf /var/lib/apt/lists/*
 
 # Create and set permissions for ControlNet Aux caching
 RUN mkdir -p /tmp/ckpts && chmod -R 777 /tmp/ckpts
