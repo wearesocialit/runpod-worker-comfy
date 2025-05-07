@@ -15,15 +15,15 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
     python3.10-dev \
     python3.10-venv \
+    python3-pip \
     git \
     wget \
     libgl1 \
     libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/* \
-    && python3.10 -m ensurepip --upgrade \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/local/bin/pip3 /usr/bin/pip \
-    && ln -sf /usr/local/bin/pip3 /usr/bin/pip3
+    && ln -sf /usr/bin/pip3 /usr/bin/pip \
+    && ln -sf /usr/bin/pip3 /usr/bin/pip3
 
 # Create and set permissions for ControlNet Aux caching
 RUN mkdir -p /tmp/ckpts && chmod -R 777 /tmp/ckpts
