@@ -21,6 +21,9 @@ RUN apt-get update && apt-get install -y \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
+# Create and set permissions for ControlNet Aux caching
+RUN mkdir -p /tmp/ckpts && chmod -R 777 /tmp/ckpts
+
 # Clean up to reduce image size
 RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 
@@ -67,35 +70,22 @@ CMD ["/start.sh"]
 FROM base as downloader
 
 ARG HUGGINGFACE_ACCESS_TOKEN
-ARG MODEL_TYPE
+# ARG MODEL_TYPE # No longer used, we are targeting flux1-dev compatible support files
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
 
-# Create necessary directories
-RUN mkdir -p models/checkpoints models/vae
+# Create necessary directories for models that will be copied to the final stage
+# Even if unet isn't downloaded here, the directory might be expected by COPY command or ComfyUI
+RUN mkdir -p models/unet models/clip models/vae
 
-# Reverted: Copy the original Network Volume model paths config from the src directory
-# COPY src/extra_model_paths.yaml /comfyui/extra_model_paths.yaml
-
-# Download checkpoints/vae/LoRA to include in image based on model type
-RUN if [ "$MODEL_TYPE" = "sdxl" ]; then \
-      wget -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors && \
-      wget -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors && \
-      wget -O models/vae/sdxl-vae-fp16-fix.safetensors https://huggingface.co/madebyollin/sdxl-vae-fp16-fix/resolve/main/sdxl_vae.safetensors; \
-    elif [ "$MODEL_TYPE" = "sd3" ]; then \
-      wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors; \
-    elif [ "$MODEL_TYPE" = "flux1-schnell" ]; then \
-      wget -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors && \
-      wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-      wget -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors; \
-    elif [ "$MODEL_TYPE" = "flux1-dev" ]; then \
-      wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors && \
-      wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
-      wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-      wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors; \
-    fi
+# Download flux1-dev compatible text encoders and VAE
+# The UNet (flux1-dev.safetensors) itself will NOT be downloaded.
+# Ensure HUGGINGFACE_ACCESS_TOKEN is available as a build secret or environment variable if needed for VAE.
+RUN echo "Downloading flux1-dev compatible support models (CLIP encoders, VAE)..." && \
+    wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
+    wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
+    wget ${HUGGINGFACE_ACCESS_TOKEN:+--header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}"} -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
 
 # Stage 3: Final image
 FROM base as final
