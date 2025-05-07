@@ -17,6 +17,7 @@ RUN apt-get update && apt-get install -y \
     git \
     wget \
     libgl1 \
+    libglib2.0-0 \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
     && ln -sf /usr/bin/pip3 /usr/bin/pip
 
@@ -34,6 +35,9 @@ WORKDIR /comfyui
 
 # Install runpod
 RUN pip install runpod requests
+
+# Install other required python packages that were previously in the large install list
+RUN pip install accelerate==1.6.0 numba
 
 # Copy the custom model paths configuration BEFORE ComfyUI potentially reads defaults
 # Also, rename the example file first to avoid potential conflicts
