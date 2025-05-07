@@ -11,15 +11,19 @@ ENV PYTHONUNBUFFERED=1
 ENV CMAKE_BUILD_PARALLEL_LEVEL=8
 
 # Install Python, git and other necessary tools
-RUN apt-get update && apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     python3.10 \
-    python3-pip \
+    python3.10-dev \
+    python3.10-venv \
     git \
     wget \
     libgl1 \
     libglib2.0-0 \
+    && rm -rf /var/lib/apt/lists/* \
+    && python3.10 -m ensurepip --upgrade \
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
-    && ln -sf /usr/bin/pip3 /usr/bin/pip
+    && ln -sf /usr/local/bin/pip3 /usr/bin/pip \
+    && ln -sf /usr/local/bin/pip3 /usr/bin/pip3
 
 # Create and set permissions for ControlNet Aux caching
 RUN mkdir -p /tmp/ckpts && chmod -R 777 /tmp/ckpts
@@ -85,7 +89,7 @@ RUN mkdir -p models/unet models/clip models/vae
 RUN echo "Downloading flux1-dev compatible support models (CLIP encoders, VAE)..." && \
     wget -O models/clip/clip_l.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors && \
     wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn.safetensors && \
-    wget ${HUGGINGFACE_ACCESS_TOKEN:+--header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}"} -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
+    # wget ${HUGGINGFACE_ACCESS_TOKEN:+--header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}"} -O models/vae/ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
 
 # Stage 3: Final image
 FROM base as final
