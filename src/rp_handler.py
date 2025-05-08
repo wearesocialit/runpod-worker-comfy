@@ -368,112 +368,115 @@ def save_input_images(images):
 
 def handler(job):
     """
-    Handler function to process incoming jobs.
-
-    Args:
-        job (dict): The job data containing input parameters.
-
-    Returns:
-        dict: The result of the job processing.
+    The handler function that will be called by the serverless worker.
+    It validates the input, queues the workflow, polls for results,
+    and returns the output.
     """
-    job_input = job["input"]
+    # --- Start Directory Listing Debug ---
+    print("--- Running Directory Listing Debug ---")
+    list_directory_contents("/runpod-volume/ComfyUI/models/")
+    list_directory_contents("/runpod-volume/ComfyUI/models/vae/") # Check VAE folder on volume
+    list_directory_contents("/comfyui/models/") # Check models folder in container
+    list_directory_contents("/comfyui/models/vae/") # Check VAE folder in container
+    print("--- End Directory Listing Debug ---")
 
-    # --- Add Directory Listing Debug ---
-    print("--- Running Directory Listing Debug --- ")
-    list_directory_contents("/runpod-volume/ComfyUI/models/") # Example, adjust as needed
-    list_directory_contents("/runpod-volume/ComfyUI/models/vae/") # Example, adjust as needed
-    list_directory_contents("/comfyui/models/")
-    list_directory_contents("/comfyui/models/vae/")
-    print("--- End Directory Listing Debug --- ")
-    # --- End Directory Listing Debug ---
 
-    # Validate input 
-    validated_data, error_message = validate_input(job_input)
-    if error_message:
-        return {"error": error_message}
-
-    workflow_to_run = validated_data["extracted_workflow"]
-    images_list = validated_data.get("images") # Get the list of images
-
-    # Make sure that the ComfyUI API is available
+    # Wait for ComfyUI API to be ready before processing the job
     if not wait_for_comfy_api_ready(f"http://{COMFY_HOST}"):
-         return {"error": f"ComfyUI API at {COMFY_HOST} did not become ready in time."}
+        # If API doesn't become ready, return an error. Adjust as needed.
+        return {
+            "error": "ComfyUI API did not become ready within the timeout period."
+        }
 
-    # Save images provided in the payload to the input directory
-    save_result = save_input_images(images_list)
-    if save_result["status"] == "error":
-        # Return error if saving failed
-        return {"error": save_result["message"], "details": save_result.get("details")}
+    job_input = job['input']
 
-    # Queue the original workflow (it should reference the saved filenames)
+    # Validate the input using the refactored function
+    validated_input, error = validate_input(job_input)
+    if error:
+        return {"error": error}
+
+    # Extract validated data
+    workflow = validated_input['extracted_workflow']
+    images = validated_input['images']
+
+    # Handle image uploads if images are provided
+    if images:
+        upload_response = upload_images(images) # Changed function name for clarity
+        if upload_response['status'] == 'error':
+            return {"error": upload_response['message'], "details": upload_response['details']}
+
+    # Queue the workflow
     try:
-        queued_workflow = queue_workflow(workflow_to_run) # Use original workflow
-        prompt_id = queued_workflow["prompt_id"]
+        queued_workflow = queue_workflow(workflow)
+        prompt_id = queued_workflow['prompt_id']
         print(f"runpod-worker-comfy - queued workflow with ID {prompt_id}")
-    except Exception as e:
-        # Consider adding more specific error details if possible
-        print(f"runpod-worker-comfy - Error queuing workflow: {str(e)}")
-        # Check if the error response from ComfyUI provides details
-        if hasattr(e, 'read'):
-             try:
-                 error_details = e.read().decode()
-                 print(f"runpod-worker-comfy - ComfyUI error details: {error_details}")
-                 # Try parsing JSON if it looks like it
-                 if error_details.strip().startswith('{'):
-                     error_json = json.loads(error_details)
-                     # Add specific fields if available, e.g., validation errors
-                     return {"error": f"Error queuing workflow: {str(e)}", "details": error_json}
-             except Exception as parse_error:
-                 print(f"runpod-worker-comfy - Could not decode/parse ComfyUI error details: {parse_error}")
-                 return {"error": f"Error queuing workflow: {str(e)} - unable to get details"}
-        return {"error": f"Error queuing workflow: {str(e)}"}
+        print(f"runpod-worker-comfy - wait until image generation is complete")
 
-    # Poll for completion
-    print(f"runpod-worker-comfy - wait until image generation is complete")
+    except Exception as e:
+        return {"error": f"Failed to queue workflow: {str(e)}"}
+
+
+    # Polling loop to check the status
     retries = 0
-    try:
-        while retries < COMFY_POLLING_MAX_RETRIES:
+    output_images = {} # Store output images
+
+    while retries < COMFY_POLLING_MAX_RETRIES:
+        try:
             history = get_history(prompt_id)
 
-            # Exit the loop if we have found the history
-            # Check if the prompt ID exists and has outputs
-            if prompt_id in history and history[prompt_id].get("outputs"):
-                break
-            # Check if the prompt ID exists and has status -> exception (indicates API-level error)
-            elif prompt_id in history and history[prompt_id].get("status", {}).get("exception"):
-                 print(f"runpod-worker-comfy - Workflow execution failed with exception in history.")
-                 exception_details = history[prompt_id].get("status", {}).get("exception")
-                 return {"error": "Workflow execution failed.", "details": exception_details}
-            else:
-                # Wait before trying again
-                time.sleep(COMFY_POLLING_INTERVAL_MS / 1000)
+            # Check if the prompt_id is in the history
+            if prompt_id not in history:
                 retries += 1
-        else: # This else belongs to the while loop, executed if loop finishes without break
-            # Try one last time to get history in case of race condition
-            history = get_history(prompt_id)
-            if not (prompt_id in history and history[prompt_id].get("outputs")):
-                 print(f"runpod-worker-comfy - Max retries reached. Last known history: {history.get(prompt_id)}")
-                 return {"error": "Max retries reached while waiting for image generation results."}
+                time.sleep(COMFY_POLLING_INTERVAL_MS / 1000)
+                continue
 
-    except Exception as e:
-         print(f"runpod-worker-comfy - Error polling job status: {str(e)}")
-         return {"error": f"Error polling job status: {str(e)}"}
+            # Check the status of the workflow based on the history data
+            prompt_history = history[prompt_id]
 
-    # Get the generated image and return it as URL in an AWS bucket or as base64
-    try:
-        final_outputs = history[prompt_id].get("outputs", {})
-        images_result = process_output_images(final_outputs, job["id"])
-    except Exception as e:
-        print(f"runpod-worker-comfy - Error processing output images: {str(e)}")
-        return {"error": f"Error processing output images: {str(e)}", "outputs_received": history.get(prompt_id, {}).get("outputs")}
+            # Check if there are outputs in the history entry
+            if 'outputs' in prompt_history:
+                print(f"runpod-worker-comfy - image generation is done")
 
-    # Clean up input directory (contains images saved by save_input_images)
-    rp_cleanup.clean(['/comfyui/input/*'])
+                # *** ADDED DEBUG LINE HERE ***
+                print("--- Listing /comfyui/output contents AFTER workflow execution ---")
+                list_directory_contents("/comfyui/output")
+                print("--- End listing /comfyui/output ---")
 
-    result = {**images_result, "refresh_worker": REFRESH_WORKER}
-    return result
+                # Process the outputs to potentially upload to S3 or return base64
+                for node_id, node_output in prompt_history['outputs'].items():
+                    if 'images' in node_output:
+                        for image in node_output['images']:
+                            print(f"runpod-worker-comfy - {image['type']}/{image['subfolder']}/{image['filename']}") # Log expected path structure
+                            image_path = f"/comfyui/{image['type']}/{image['subfolder']}/{image['filename']}" # Construct full path
+
+                            # Check if file exists before trying to process
+                            if os.path.exists(image_path):
+                                image_data = base64_encode(image_path) # Encode the existing image
+                                output_images[image['filename']] = {"image": image_data} # Return base64
+                            else:
+                                print(f"runpod-worker-comfy - the image does not exist in the output folder")
+                                # Decide how to handle missing files - return error or skip?
+                                # Example: Returning an error indicator for this file
+                                output_images[image['filename']] = {"error": "Output image file not found after execution."}
 
 
-# Start the handler only if this script is run directly
-if __name__ == "__main__":
-    runpod.serverless.start({"handler": handler})
+                # Return the result with image data
+                return {
+                    "status": "success",
+                    "message": "Workflow executed successfully.",
+                    "output_images": output_images,
+                    "refresh_worker": REFRESH_WORKER,
+                }
+
+            # If there are no outputs yet, continue polling
+            retries += 1
+            time.sleep(COMFY_POLLING_INTERVAL_MS / 1000)
+
+        except Exception as e:
+            return {"error": f"An error occurred during polling or processing: {str(e)}"}
+
+    # If the loop completes without finding the result, return a timeout error
+    return {"error": "Polling timeout: Workflow execution did not complete within the expected time."}
+
+
+runpod.serverless.start({"handler": handler})
