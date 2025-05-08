@@ -460,13 +460,21 @@ def handler(job):
                                 output_images[image['filename']] = {"error": "Output image file not found after execution."}
 
 
-                # Return the result with image data
-                return {
+                # Prepare the final result dictionary
+                result_dict = {
                     "status": "success",
                     "message": "Workflow executed successfully.",
                     "output_images": output_images,
                     "refresh_worker": REFRESH_WORKER,
                 }
+                
+                # *** ADDED DEBUG LINE HERE ***
+                print("--- Handler returning final result dictionary: ---")
+                print(json.dumps(result_dict, indent=2)) # Print the dict as formatted JSON
+                print("--- End handler final result --- ")
+
+                # Return the result with image data
+                return result_dict
 
             # If there are no outputs yet, continue polling
             retries += 1
