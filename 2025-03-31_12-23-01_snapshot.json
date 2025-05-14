@@ -2,7 +2,7 @@
     "comfyui": "a4e679765ec6a7adc6dda326c7bab915e2914bd6",
     "git_custom_nodes": {
         "https://github.com/risunobushi/ComfyUI_FaceMesh_Eyewear_Mask.git": {
-            "hash": "56638b5d13e0db46317ad4a33025d0910bd92a49",
+            "hash": "e57b08540f3064aabed854a429f9329b61a61ed8",
             "disabled": false
         },
         "https://github.com/ltdrdata/ComfyUI-Manager.git": {
