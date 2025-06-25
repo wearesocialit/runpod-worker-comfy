@@ -24,6 +24,9 @@
         }
     ],
     "pips": {
+        "detectron2==0.6": "",
+        "pytorch3d==0.7.6": "",
+        "submitit==1.5.1": "",
         "absl-py==2.2.2": "",
         "accelerate==1.7.0": "",
         "addict==2.4.0": "",
