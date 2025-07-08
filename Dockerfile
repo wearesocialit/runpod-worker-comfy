@@ -41,7 +41,7 @@ RUN apt-get autoremove -y && apt-get clean -y && rm -rf /var/lib/apt/lists/*
 # Install comfy-cli
 # Create virtual environment for ComfyUI
 RUN python3 -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:/usr/bin:$PATH"
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir comfy-cli
 
