@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# Use libtcmalloc for better memory management
+TCMALLOC="$(ldconfig -p | grep -Po "libtcmalloc.so.\d" | head -n 1)"
+export LD_PRELOAD="${TCMALLOC}"
+
 # Set the desired directory
 COMFYUI_DIR="/comfyui"
 
