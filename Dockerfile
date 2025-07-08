@@ -55,7 +55,7 @@ WORKDIR /comfyui
 RUN pip install runpod requests
 
 # Install other required python packages that were previously in the large install list
-RUN pip install accelerate==1.7.0 numba scikit-image simpleeval "huggingface_hub==0.22.2" onnxruntime-gpu yacs websocket-client opencv-python opencv-python-headless
+RUN pip install accelerate==1.7.0 numba scikit-image simpleeval onnxruntime-gpu yacs websocket-client opencv-python opencv-python-headless
 
 # Copy the custom model paths configuration BEFORE ComfyUI potentially reads defaults
 # Also, rename the example file first to avoid potential conflicts
