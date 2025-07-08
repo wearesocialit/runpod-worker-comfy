@@ -1,29 +1,13 @@
-# Custom paths from the RunPod volume mount
-
-# Config based on the example structure from the original repo
 runpod_worker_comfy:
-  base_path: /runpod-volume/ComfyUI  # Base path BEFORE the 'models' directory
-
-  # Paths relative to the base_path
-  vae: models/vae/
+  base_path: /runpod-volume/ComfyUI
+  checkpoints: models/checkpoints/
   clip: models/clip/
-  unet: models/diffusion_models/ # Use the actual subfolder name for unet models
-
-  # Add other standard types if their subfolders exist under /runpod-volume/ComfyUI/models/
-  # checkpoints: models/checkpoints/
-  # clip_vision: models/clip_vision/
-  # configs: models/configs/
-  # controlnet: models/controlnet/
-  # embeddings: models/embeddings/
-  # loras: models/loras/
-  # upscale_models: models/upscale_models/
-
-# ComfyUI should append the type subfolder (e.g., 'vae', 'clip') to these base paths
-# and look for the model file within that combined path.
-
-# Add other types if needed, ensure they point to the correct subfolder under /runpod-volume/ComfyUI/models/
-# Example:
-# loras:
-#  - /runpod-volume/ComfyUI/models/loras
-# checkpoints:
-#  - /runpod-volume/ComfyUI/models/checkpoints 
+  clip_vision: models/clip_vision/
+  configs: models/configs/
+  controlnet: models/controlnet/
+  embeddings: models/embeddings/
+  loras: models/loras/
+  upscale_models: models/upscale_models/
+  vae: models/vae/
+  unet: models/unet/
+  diffusion_models: models/diffusion_models/
