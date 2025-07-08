@@ -7,6 +7,9 @@ export LD_PRELOAD="${TCMALLOC}"
 # Set the desired directory
 COMFYUI_DIR="/comfyui"
 
+# Allow operators to tweak verbosity; default is DEBUG.
+: "${COMFY_LOG_LEVEL:=DEBUG}"
+
 # Check if the directory exists
 if [ -d "$COMFYUI_DIR" ]; then
   # Navigate to the directory
