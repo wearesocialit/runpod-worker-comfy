@@ -37,10 +37,6 @@
             "hash": "bdddb08ca82d90d75d97b1d437a652e0284a32ac",
             "disabled": false
         },
-        "https://github.com/Suzie1/ComfyUI_Comfyroll_CustomNodes": {
-            "hash": "d78b780ae43fcf8c6b7c6505e6ffb4584281ceca",
-            "disabled": true
-        },
         "https://github.com/storyicon/comfyui_segment_anything": {
             "hash": "ab6395596399d5048639cdab7e44ec9fae857a93",
             "disabled": false
