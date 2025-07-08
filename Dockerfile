@@ -1,5 +1,5 @@
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:12.9.1-cudnn-runtime-ubuntu22.04 AS base
+FROM nvidia/cuda:12.6.3-cudnn-runtime-ubuntu24.04 AS base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -46,7 +46,7 @@ RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
     pip install --no-cache-dir comfy-cli
 
 # Install ComfyUI
-RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 12.9 --nvidia --version 0.3.26
+RUN /usr/bin/yes | comfy --workspace /comfyui install --cuda-version 12.6 --nvidia --version 0.3.26
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
