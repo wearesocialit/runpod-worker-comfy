@@ -18,14 +18,22 @@ if [ -d "$COMFYUI_DIR" ]; then
 
   # Add debug ls commands
   echo "--- DEBUG: Listing relevant model directories ---"
-  echo "Listing /runpod-volume/ComfyUI/models/..."
-  ls -l /runpod-volume/ComfyUI/models/
-  echo "Listing /runpod-volume/ComfyUI/models/vae/..."
-  ls -l /runpod-volume/ComfyUI/models/vae/
-  echo "Listing /runpod-volume/ComfyUI/models/clip/..."
-  ls -l /runpod-volume/ComfyUI/models/clip/
-  echo "Listing /runpod-volume/ComfyUI/models/diffusion_models/..."
-  ls -l /runpod-volume/ComfyUI/models/diffusion_models/
+  # Define the base directory
+  BASE_DIR="/runpod-volume/ComfyUI/models"
+  echo "Listing $BASE_DIR/..."
+  ls -l "$BASE_DIR/"
+  # Loop through all subdirectories in the base directory
+  for dir in "$BASE_DIR"/*/; do
+    if [ -d "$dir" ]; then
+      echo "Listing contents of ${dir}..."
+      ls -l "$dir"
+    fi
+  done
+  echo "--- END DEBUG ---"
+
+  echo "--- DEBUG: Displaying full model directory tree ---"
+  # shows the tree deep
+  tree "$BASE_DIR/"
   echo "--- END DEBUG ---"
 
   # --- NEW: Debug ls command for /comfyui directory ---
