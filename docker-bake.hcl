@@ -30,6 +30,7 @@ target "full" {
   context = "."
   dockerfile = "Dockerfile"
   target = "final"
+  no-cache = true
   args = {
     MODEL_TYPE = "full"
     HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}"
