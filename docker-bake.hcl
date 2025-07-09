@@ -15,13 +15,25 @@ variable "HUGGINGFACE_ACCESS_TOKEN" {
 }
 
 group "default" {
-  targets = ["base", "sdxl", "sd3", "flux1-schnell", "flux1-dev"]
+  targets = ["base", "sdxl", "sd3", "flux1-schnell", "flux1-dev", "full"]
 }
 
 target "base" {
   context = "."
   dockerfile = "Dockerfile"
   target = "base"
+  platforms = ["linux/amd64"]
+  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
+}
+
+target "full" {
+  context = "."
+  dockerfile = "Dockerfile"
+  target = "base"
+  args = {
+    MODEL_TYPE = "full"
+    HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}"
+  }
   platforms = ["linux/amd64"]
   tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
 }
