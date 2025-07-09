@@ -80,9 +80,11 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base as downloader
 
+ARG MODEL_TYPE=full
+
 ARG CACHE_BUSTER
 
-# ARG HUGGINGFACE_ACCESS_TOKEN # No longer needed as no models are downloaded in this stage
+ARG HUGGINGFACE_ACCESS_TOKEN
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui

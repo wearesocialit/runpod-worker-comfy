@@ -14,6 +14,10 @@ variable "HUGGINGFACE_ACCESS_TOKEN" {
   default = ""
 }
 
+variable "CACHE_BUSTER" {
+  default = ""
+}
+
 group "default" {
   targets = ["base", "sdxl", "sd3", "flux1-schnell", "flux1-dev", "full"]
 }
@@ -34,9 +38,9 @@ target "full" {
   args = {
     MODEL_TYPE = "full"
     HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}",
-    CACHE_BUSTER = "deploy-2025-07-09-212000"
+    CACHE_BUSTER = "${CACHE_BUSTER}"
   }
-  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
+  tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-full"]
   inherits = ["base"]
 }
 
