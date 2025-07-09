@@ -34,7 +34,7 @@ target "full" {
   args = {
     MODEL_TYPE = "full"
     HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}",
-    CACHE_BUSTER = "deploy-2025-07-09-210000"
+    CACHE_BUSTER = "deploy-2025-07-09-212000"
   }
   tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
   inherits = ["base"]
