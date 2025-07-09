@@ -29,13 +29,13 @@ target "base" {
 target "full" {
   context = "."
   dockerfile = "Dockerfile"
-  target = "base"
+  target = "final"
   args = {
     MODEL_TYPE = "full"
     HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}"
   }
-  platforms = ["linux/amd64"]
   tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
+  inherits = ["base"]
 }
 
 target "sdxl" {
