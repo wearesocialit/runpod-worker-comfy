@@ -33,7 +33,8 @@ target "full" {
   no-cache = 1
   args = {
     MODEL_TYPE = "full"
-    HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}"
+    HUGGINGFACE_ACCESS_TOKEN = "${HUGGINGFACE_ACCESS_TOKEN}",
+    CACHE_BUSTER = "deploy-2025-07-09-205600"
   }
   tags = ["${DOCKERHUB_REPO}/${DOCKERHUB_IMG}:${RELEASE_VERSION}-base"]
   inherits = ["base"]

@@ -80,10 +80,14 @@ CMD ["/start.sh"]
 # Stage 2: Download models
 FROM base as downloader
 
+ARG CACHE_BUSTER
+
 # ARG HUGGINGFACE_ACCESS_TOKEN # No longer needed as no models are downloaded in this stage
 
 # Change working directory to ComfyUI
 WORKDIR /comfyui
+
+RUN echo "Forcing cache invalidation with: ${CACHE_BUSTER}"
 
 # Create necessary directories for models that will be copied to the final stage
 # No models will be downloaded here; they are expected to be on the network volume.
