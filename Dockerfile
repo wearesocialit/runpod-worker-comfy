@@ -1,5 +1,5 @@
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 AS base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -78,7 +78,7 @@ RUN /restore_snapshot.sh
 CMD ["/start.sh"]
 
 # Stage 2: Download models
-FROM base as downloader
+FROM base AS downloader
 
 ARG MODEL_TYPE=full
 
@@ -96,17 +96,17 @@ RUN echo "Forcing cache invalidation with: ${CACHE_BUSTER}"
 RUN mkdir -p models/unet models/clip models/vae models/checkpoints
 
 # Download checkpoints/vae/unet/clip models to include in image based on model type
+RUN echo "--> Downloading SD3 models..."
+RUN wget --header="Authorization: Bearer $HUGGINGFACE_ACCESS_TOKEN" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors
 RUN echo "--> Downloading SDXL models..."
 RUN wget -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors
 RUN wget -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors
-RUN echo "--> Downloading SD3 models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/resolve/main/sd3_medium_incl_clips_t5xxlfp8.safetensors
 RUN echo "--> Downloading FLUX.1-schnell models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-schnell-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors
+RUN wget --header="Authorization: Bearer $HUGGINGFACE_ACCESS_TOKEN" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/flux1-schnell.safetensors
+RUN wget --header="Authorization: Bearer $HUGGINGFACE_ACCESS_TOKEN" -O models/vae/flux1-schnell-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/resolve/main/ae.safetensors
 RUN echo "--> Downloading FLUX.1-dev models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-dev-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
+RUN wget --header="Authorization: Bearer $HUGGINGFACE_ACCESS_TOKEN" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/flux1-dev.safetensors
+RUN wget --header="Authorization: Bearer $HUGGINGFACE_ACCESS_TOKEN" -O models/vae/flux1-dev-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/resolve/main/ae.safetensors
 RUN echo "--> Downloading FLUX.1-dev-fp8 models..."
 RUN wget -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors
 RUN echo "--> Downloading common text encoders..."
@@ -115,7 +115,7 @@ RUN wget -O models/clip/t5xxl_fp8_e4m3fn.safetensors https://huggingface.co/comf
 
 # Ensure there's no empty continuation line before the next stage
 # Stage 3: Final image
-FROM base as final
+FROM base AS final
 
 # Reverted: Copy the original config file from the base stage
 COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
