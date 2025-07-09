@@ -96,17 +96,17 @@ RUN echo "Forcing cache invalidation with: ${CACHE_BUSTER}"
 RUN mkdir -p models/unet models/clip models/vae models/checkpoints
 
 # Download checkpoints/vae/unet/clip models to include in image based on model type
-RUN echo "--> Downloading SD3 models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/blob/main/sd3_medium_incl_clips_t5xxlfp8.safetensors
+# RUN echo "--> Downloading SD3 models..."
+# RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/checkpoints/sd3_medium_incl_clips_t5xxlfp8.safetensors https://huggingface.co/stabilityai/stable-diffusion-3-medium/blob/main/sd3_medium_incl_clips_t5xxlfp8.safetensors
 RUN echo "--> Downloading SDXL models..."
 RUN wget -O models/checkpoints/sd_xl_base_1.0.safetensors https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/blob/main/sd_xl_base_1.0.safetensors
 RUN wget -O models/vae/sdxl_vae.safetensors https://huggingface.co/stabilityai/sdxl-vae/blob/main/sdxl_vae.safetensors
-RUN echo "--> Downloading FLUX.1-schnell models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/blob/main/flux1-schnell.safetensors
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-schnell-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/blob/main/ae.safetensors
-RUN echo "--> Downloading FLUX.1-dev models..."
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/flux1-dev.safetensors
-RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-dev-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/ae.safetensors
+# RUN echo "--> Downloading FLUX.1-schnell models..."
+# RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-schnell.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/blob/main/flux1-schnell.safetensors
+# RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-schnell-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-schnell/blob/main/ae.safetensors
+# RUN echo "--> Downloading FLUX.1-dev models..."
+# RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/unet/flux1-dev.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/flux1-dev.safetensors
+# RUN wget --header="Authorization: Bearer ${HUGGINGFACE_ACCESS_TOKEN}" -O models/vae/flux1-dev-ae.safetensors https://huggingface.co/black-forest-labs/FLUX.1-dev/blob/main/ae.safetensors
 RUN echo "--> Downloading FLUX.1-dev-fp8 models..."
 RUN wget -O models/checkpoints/flux1-dev-fp8.safetensors https://huggingface.co/Comfy-Org/flux1-dev/blob/main/flux1-dev-fp8.safetensors
 RUN echo "--> Downloading common text encoders..."
