@@ -2,7 +2,7 @@
 
 # Config based on the example structure from the original repo
 runpod_worker_comfy:
-  base_path: /runpod-volume/ComfyUI  # Base path BEFORE the 'models' directory
+  base_path: /runpod-volume  # Base path BEFORE the 'models' directory
 
   # Paths relative to the base_path
   vae: models/vae/
