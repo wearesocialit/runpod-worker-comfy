@@ -48,12 +48,10 @@
     },
     "cnr_custom_nodes": {
         "comfyui-florence2": "1.0.5",
-        "comfyui-layerdiffuse": "1.0.4",
         "comfyui-custom-scripts": "1.2.5",
         "comfyui-mixlab-nodes": "0.46.0",
         "comfyui-ic-light": "1.0.5",
         "rgthree-comfy": "1.0.2506230015",
-        "comfyui-impact-pack": "8.17.1",
         "comfyui_fill-nodes": "1.6.0",
         "comfyui-enricos-nodes": "3.1.6",
         "cg-use-everywhere": "6.2.1",
