@@ -19,6 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     libgl1 \
     libglib2.0-0 \
+    tree \
     # Link python3.10 to python immediately
     && ln -sf /usr/bin/python3.10 /usr/bin/python \
     # Clean lists for this layer
