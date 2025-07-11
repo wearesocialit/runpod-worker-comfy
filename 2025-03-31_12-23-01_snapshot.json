@@ -52,11 +52,45 @@
         "https://github.com/ltdrdata/ComfyUI-Manager": {
             "hash": "86fcc4af7447ce55b252ce2d78e163e490670128",
             "disabled": false
+        },
+        "https://github.com/WASasquatch/was-node-suite-comfyui": {
+            "hash": "9ae952b1b435d2bd846bfe6516919b5a8b9201aa",
+            "disabled": false
+        },
+        "https://github.com/kijai/ComfyUI-IC-Light": {
+            "hash": "0208191a9bd2a214167c8a52237ecadd1fa0220c",
+            "disabled": false
+        },
+        "https://github.com/jakechai/ComfyUI-JakeUpgrade": {
+            "hash": "2c2d45ea9a06ba9c8b93c780e507ed76f424134f",
+            "disabled": false
+        },
+        "https://github.com/Fannovel16/comfyui_controlnet_aux": {
+            "hash": "83463c2e4b04e729268e57f638b4212e0da4badc",
+            "disabled": false
+        },
+        "https://github.com/storyicon/comfyui_segment_anything": {
+            "hash": "ab6395596399d5048639cdab7e44ec9fae857a93",
+            "disabled": false
+        },
+        "https://github.com/sipherxyz/comfyui-art-venture": {
+            "hash": "50abaace756b96f5f5dc2c9d72826ef371afd45e",
+            "disabled": false
+        },
+        "https://github.com/cubiq/ComfyUI_IPAdapter_plus": {
+            "hash": "9d076a3df0d2763cef5510ec5ab807f6632c39f5",
+            "disabled": false
+        },
+        "https://github.com/huchenlei/ComfyUI-IC-Light-Native": {
+            "hash": "40883a839d2a719ad3d3a454700609b94b1a9c65",
+            "disabled": false
         }
     },
     "cnr_custom_nodes": {
         "comfyui-art-venture": "1.1.0",
         "comfyui_controlnet_aux": "1.1.0",
+        "comfyui-mixlab-nodes": "0.46.0",
+        "cg-use-everywhere": "5.0.8",
         "comfyui-inpaint-nodes": "1.0.4"
     },
     "file_custom_nodes": [
