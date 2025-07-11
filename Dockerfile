@@ -1,5 +1,5 @@
 # Stage 1: Base image with common dependencies
-FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 as base
+FROM nvidia/cuda:11.8.0-cudnn8-runtime-ubuntu22.04 AS base
 
 # Prevents prompts from packages asking for user input during installation
 ENV DEBIAN_FRONTEND=noninteractive
@@ -78,7 +78,7 @@ RUN /restore_snapshot.sh
 CMD ["/start.sh"]
 
 # Stage 2: Download models
-FROM base as downloader
+FROM base AS downloader
 
 # ARG HUGGINGFACE_ACCESS_TOKEN # No longer needed as no models are downloaded in this stage
 
@@ -91,7 +91,7 @@ RUN mkdir -p models/unet models/clip models/vae
 
 # Ensure there's no empty continuation line before the next stage
 # Stage 3: Final image
-FROM base as final
+FROM base AS final
 
 # Reverted: Copy the original config file from the base stage
 COPY --from=base /comfyui/extra_model_paths.yaml /comfyui/
