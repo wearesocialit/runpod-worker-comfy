@@ -10,14 +10,14 @@ if [ -d "$COMFYUI_DIR" ]; then
 
   # Add debug ls commands
   echo "--- DEBUG: Listing relevant model directories ---"
-  echo "Listing /runpod-volume/ComfyUI/models/..."
-  ls -l /runpod-volume/ComfyUI/models/
-  echo "Listing /runpod-volume/ComfyUI/models/vae/..."
-  ls -l /runpod-volume/ComfyUI/models/vae/
-  echo "Listing /runpod-volume/ComfyUI/models/clip/..."
-  ls -l /runpod-volume/ComfyUI/models/clip/
-  echo "Listing /runpod-volume/ComfyUI/models/diffusion_models/..."
-  ls -l /runpod-volume/ComfyUI/models/diffusion_models/
+  echo "Listing /runpod-volume/models/..."
+  ls -l /runpod-volume/models/
+  echo "Listing /runpod-volume/models/vae/..."
+  ls -l /runpod-volume/models/vae/
+  echo "Listing /runpod-volume/models/clip/..."
+  ls -l /runpod-volume/models/clip/
+  echo "Listing /runpod-volume/models/diffusion_models/..."
+  ls -l /runpod-volume/models/diffusion_models/
   echo "--- END DEBUG ---"
 
   # --- NEW: Debug ls command for /comfyui directory ---

@@ -374,8 +374,8 @@ def handler(job):
     """
     # --- Start Directory Listing Debug ---
     print("--- Running Directory Listing Debug ---")
-    list_directory_contents("/runpod-volume/ComfyUI/models/")
-    list_directory_contents("/runpod-volume/ComfyUI/models/vae/") # Check VAE folder on volume
+    list_directory_contents("/runpod-volume/models/")
+    list_directory_contents("/runpod-volume/models/vae/") # Check VAE folder on volume
     list_directory_contents("/comfyui/models/") # Check models folder in container
     list_directory_contents("/comfyui/models/vae/") # Check VAE folder in container
     print("--- End Directory Listing Debug ---")
