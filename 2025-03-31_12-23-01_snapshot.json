@@ -56,7 +56,8 @@
     },
     "cnr_custom_nodes": {
         "comfyui-art-venture": "1.1.0",
-        "comfyui_controlnet_aux": "1.1.0"
+        "comfyui_controlnet_aux": "1.1.0",
+        "comfyui-inpaint-nodes": "1.0.4"
     },
     "file_custom_nodes": [
         {
